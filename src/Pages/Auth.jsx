@@ -22,7 +22,7 @@ const Auth = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isSignup) {
-      dispatch(signUpUser({ email, password })).then((result)=>{
+      dispatch(signUpUser({name, email, password })).then((result)=>{
         if (!result.error) {
           navigate("/todo"); 
         }

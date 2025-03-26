@@ -16,8 +16,10 @@ export const signUpUser = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      await updateProfile(user,{displayName:name});
       localStorage.setItem("user", JSON.stringify(userCredential.user)); // Save to localStorage
-      return userCredential.user;
+      return { uid: user.uid, email: user.email, displayName: name };
     } catch (error) {
       return rejectWithValue(error.message);
     }
