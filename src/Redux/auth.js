@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   signInWithPopup,
+  updateProfile,
 } from "firebase/auth";
 
 // Load user from localStorage on page load
