@@ -14,12 +14,16 @@ const storedUser = JSON.parse(localStorage.getItem("user")) || null;
 // Async Thunks
 export const signUpUser = createAsyncThunk(
   "auth/signUpUser",
-  async ({ email, password }, { rejectWithValue }) => {
+  async ({name, email, password }, { rejectWithValue }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      await updateProfile(user,{displayName:name});
-      localStorage.setItem("user", JSON.stringify(userCredential.user)); // Save to localStorage
+      if (user) {
+        await updateProfile(user, { displayName: name }); //Update user profile
+      }
+  
+
+      localStorage.setItem("user", JSON.stringify(user)); // Save to localStorage
       return { uid: user.uid, email: user.email, displayName: name };
     } catch (error) {
       return rejectWithValue(error.message);

@@ -24,7 +24,7 @@ const Navbar = () => {
         <Spacer />
         {user ? (
           <Flex align="center" gap={4}>
-            <Text fontWeight="bold">{user.displayName || "User"}</Text>
+            <Text fontWeight="bold">{user.displayName || user?.email.split("@")[0]||"User"}</Text>
             <Button colorScheme="red" onClick={handleLogout}>
               Logout
             </Button>
