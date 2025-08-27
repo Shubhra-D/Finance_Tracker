@@ -1,32 +1,38 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Load tasks from localStorage
-const loadTasks = () => {
-  const tasks = localStorage.getItem("tasks");
+// Helper: Load tasks for a specific user
+const loadTasks = (userId) => {
+  const tasks = localStorage.getItem(`tasks_${userId}`);
   return tasks ? JSON.parse(tasks) : [];
 };
 
-// Save tasks to localStorage
-const saveTasks = (tasks) => {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+// Helper: Save tasks for a specific user
+const saveTasks = (userId, tasks) => {
+  localStorage.setItem(`tasks_${userId}`, JSON.stringify(tasks));
 };
 
 const tasksSlice = createSlice({
   name: "tasks",
   initialState: {
-    tasks: loadTasks(),
+    tasks: [],   // empty initially, will load after login
   },
   reducers: {
+    loadUserTasks: (state, action) => {
+      const userId = action.payload;
+      state.tasks = loadTasks(userId);
+    },
     addTask: (state, action) => {
-      state.tasks.push(action.payload);
-      saveTasks(state.tasks);
+      const { userId, ...task } = action.payload;
+      state.tasks.push(task);
+      saveTasks(userId, state.tasks);
     },
     deleteTask: (state, action) => {
-      state.tasks = state.tasks.filter((task) => task.id !== action.payload);
-      saveTasks(state.tasks);
+      const { id, userId } = action.payload;
+      state.tasks = state.tasks.filter((task) => task.id !== id);
+      saveTasks(userId, state.tasks);
     },
   },
 });
 
-export const { addTask, deleteTask } = tasksSlice.actions;
+export const { addTask, deleteTask, loadUserTasks } = tasksSlice.actions;
 export default tasksSlice.reducer;
