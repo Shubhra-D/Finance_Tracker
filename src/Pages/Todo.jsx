@@ -92,9 +92,6 @@ const AnimatedWaves = () => {
   );
 };
 
-// 👇 get the current user from localStorage or your auth slice
-const user = useSelector((state)=>state.auth.user);
-  console.log(user);
 
 const Todo = () => {
   const dispatch = useDispatch();
@@ -106,7 +103,10 @@ const Todo = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  
+  // 👇 get the current user from localStorage or your auth slice
+const user = useSelector((state)=>state.auth.user);
+  console.log(user);
+
 
 
   useEffect(() => {
