@@ -75,10 +75,14 @@ const Navbar = () => {
 
         {user ? (
           <Flex align="center" gap={4}>
+            
             <Text fontWeight="bold">
-              {user.displayName || user?.email.split("@")[0] || "User"}
+             Welcome {user.displayName || user?.email.split("@")[0] || "User"} !
             </Text>
-            <Button colorScheme="red" onClick={handleLogout}>
+            <Button as={Link} to={"/todo"} color={'whiteAlpha.900'} bgGradient={'to-bl'} gradientFrom={'teal.400'} gradientTo={'purple.400'}>
+               Task
+            </Button>
+            <Button bgGradient='to-bl' gradientFrom={'pink.500'} gradientTo={'red.400'} color={'whiteAlpha.800'} onClick={handleLogout}>
               Logout
             </Button>
           </Flex>

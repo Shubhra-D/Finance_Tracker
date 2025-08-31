@@ -25,6 +25,7 @@ const tasksSlice = createSlice({
       const { userId, ...task } = action.payload;
       state.tasks.push(task);
       saveTasks(userId, state.tasks);
+      console.log("Task in the state",state.tasks);
     },
     deleteTask: (state, action) => {
       const { id, userId } = action.payload;
