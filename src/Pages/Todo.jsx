@@ -22,6 +22,7 @@ import {
 import axios from "axios";
 import { motion } from "framer-motion";
 import Sidebar from "./Sidebar";
+import TodoPdf from "@/PDF/todoPdf";
 
 // Motion components
 const MotionBox = motion(Box);
@@ -463,9 +464,14 @@ const Todo = () => {
 
         {/* Task List */}
         <MotionBox variants={itemVariants}>
-          <Text fontSize="2xl" fontWeight="bold" mb={6} color="gray.700">
+          <Flex gap={4} justify={'space-between'}>
+            
+            <Text fontSize="2xl" fontWeight="bold" mb={6} color="gray.700">
             📋 Your Task Universe
           </Text>
+          <TodoPdf/>
+          </Flex>
+          
           <SimpleGrid gap={4} minChildWidth={"sm"}>
             {filteredTasks &&
               filteredTasks.map((t, index) => (
