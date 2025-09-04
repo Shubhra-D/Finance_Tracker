@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addTask, deleteTask, loadUserTasks } from "../Redux/task";
+import {
+  addTask,
+  deleteTask,
+  loadUserTasks,
+  toggleTaskCompletion,
+  updateTask,
+} from "../Redux/task";
 import {
   Box,
   Button,
@@ -8,12 +14,14 @@ import {
   Text,
   VStack,
   HStack,
-  Select,
   Spinner,
   NativeSelect,
+  Flex,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import Sidebar from "./Sidebar";
 
 // Motion components
 const MotionBox = motion(Box);
@@ -92,7 +100,6 @@ const AnimatedWaves = () => {
   );
 };
 
-
 const Todo = () => {
   const dispatch = useDispatch();
   const tasks = useSelector((state) => state.tasks.tasks);
@@ -102,18 +109,42 @@ const Todo = () => {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [dueDate, setDueDate] = useState();
+  //edititing
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
+  const [editPriority, setEditPriority] = useState("Low");
+  const [editDate, setEditDate] = useState("");
+  //filtering and sorting
+  const [filtering, setFiltering] = useState("all");
+  const [sorting, setSorting] = useState("newest");
+  //make a copy
+  let filteredTasks = [...tasks];
 
-  // 👇 get the current user from localStorage or your auth slice
-const user = useSelector((state)=>state.auth.user);
-  console.log(user);
-
-
+  //  get the current user from localStorage or your auth slice
+  const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     if (user?.uid) {
       dispatch(loadUserTasks(user.uid));
     }
   }, [user, dispatch]);
+
+  //filtering
+  if (filtering === "pending") {
+    filteredTasks = filteredTasks.filter((task) => !task.completed);
+  } else if (filtering === "completed") {
+    filteredTasks = filteredTasks.filter((task) => task.completed);
+  }
+
+  //sorting
+  if (sorting === "newest") {
+    filteredTasks.sort((a, b) => b.id - a.id);
+  } else if (sorting === "oldest") {
+    filteredTasks.sort((a, b) => a.id - b.id);
+  } else if (sorting === "dueAsc") {
+    filteredTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  }
 
   const fetchWeather = async () => {
     if (!city) return;
@@ -135,26 +166,27 @@ const user = useSelector((state)=>state.auth.user);
   };
 
   const handleAddTask = () => {
-  if (!user) {
-    console.error("User not found, cannot add task");
-    return;
-  }
-  if (task.trim() === "") return;
+    if (!user) {
+      console.error("User not found, cannot add task");
+      return;
+    }
+    if (task.trim() === "") return;
 
-  const newTask = {
-    id: Date.now(),
-    text: task,
-    priority: priority || "Low",
-    userId: user.uid,  
+    const newTask = {
+      id: Date.now(),
+      text: task,
+      dueDate: dueDate || null,
+      priority: priority || "Low",
+      userId: user.uid,
+    };
+
+    console.log("Dispatching:", newTask);
+    dispatch(addTask(newTask));
+
+    setTask("");
+    setPriority("");
+    setDueDate("");
   };
-
-  console.log("Dispatching:", newTask);
-  dispatch(addTask(newTask));
-
-  setTask("");
-  setPriority("");
-};
-
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -197,6 +229,12 @@ const user = useSelector((state)=>state.auth.user);
       bgGradient="linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)"
       p={4}
     >
+      <Sidebar
+        filtering={filtering}
+        setFiltering={setFiltering}
+        sorting={sorting}
+        setSorting={setSorting}
+      />
       <AnimatedWaves />
       <FloatingOrbs />
 
@@ -204,6 +242,7 @@ const user = useSelector((state)=>state.auth.user);
         maxW="4xl"
         mx="auto"
         mt={14}
+        mr={14}
         p={8}
         borderRadius="3xl"
         bg="rgba(255, 255, 255, 0.95)"
@@ -427,9 +466,9 @@ const user = useSelector((state)=>state.auth.user);
           <Text fontSize="2xl" fontWeight="bold" mb={6} color="gray.700">
             📋 Your Task Universe
           </Text>
-          <VStack spacing={4} align="stretch">
-            {tasks &&
-              tasks.map((t, index) => (
+          <SimpleGrid gap={4} minChildWidth={"sm"}>
+            {filteredTasks &&
+              filteredTasks.map((t, index) => (
                 <motion.div
                   key={t.id}
                   initial={{ opacity: 0, x: -50 }}
@@ -461,53 +500,176 @@ const user = useSelector((state)=>state.auth.user);
                       bg={getPriorityColor(t.priority)}
                     />
 
-                    <VStack align="start" spacing={3}>
-                      <Text fontWeight="bold" fontSize="lg" color="gray.700">
-                        📌 {t.text}
-                      </Text>
-                      <HStack>
-                        <Box
-                          px={3}
-                          py={1}
-                          borderRadius="full"
-                          bg={getPriorityColor(t.priority)}
-                          color="white"
-                          fontSize="sm"
-                          fontWeight="semibold"
-                        >
-                          {t.priority === "High"
-                            ? "🔥"
-                            : t.priority === "Medium"
-                            ? "⚡"
-                            : "🟢"}
-                          {t.priority} Priority
-                        </Box>
-                      </HStack>
-                      <MotionButton
-                        bgGradient="to-r"
-                        gradientFrom={"red.400"}
-                        gradientTo={"red.600"}
-                        color="white"
-                        size="sm"
-                        borderRadius="xl"
-                        onClick={() =>
-                          dispatch(deleteTask({ id: t.id, userId: user.uid }))
-                        }
-                        _hover={{
-                          bgGradient: "to-r",
-                          gradientFrom: "red.500",
-                          gradientTo: "red.700",
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        🗑️ Delete Task
-                      </MotionButton>
+                    <VStack align="start" gap={3}>
+                      {editingId === t.id ? (
+                        <>
+                          <MotionInput
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            color="gray.700"
+                            bg="rgba(255, 255, 255, 0.8)"
+                            border="1px solid rgba(72, 187, 120, 0.3)"
+                            borderRadius="xl"
+                          />
+                          <MotionInput
+                            type="date"
+                            value={editDate}
+                            onChange={(e) => setEditDate(e.target.value)}
+                            color="gray.600"
+                            bg="rgba(255, 255, 255, 0.8)"
+                            border="1px solid rgba(72, 187, 120, 0.3)"
+                            borderRadius="xl"
+                          />
+                          <NativeSelect.Root
+                            value={editPriority}
+                            onChange={(e) => setEditPriority(e.target.value)}
+                            size="sm"
+                            color={'GrayText'}
+                          ><NativeSelect.Field>
+                             <option value="High">🔥 High</option>
+                            <option value="Medium">⚡ Medium</option>
+                            <option value="Low">🟢 Low</option>
+                          </NativeSelect.Field>
+                            
+                          </NativeSelect.Root>
+                          <HStack>
+                            <MotionButton
+                              bgGradient="to-r"
+                              gradientFrom="green.400"
+                              gradientTo="green.600"
+                              color="white"
+                              size="sm"
+                              borderRadius="xl"
+                              onClick={() => {
+                                dispatch(
+                                  updateTask({
+                                    id: t.id,                                    
+                                    userId: user.uid,
+                                    updates:{
+                                       text: editText,
+                                    dueDate: editDate,
+                                    priority: editPriority,
+                                    }
+                                  })
+                                );
+                                setEditingId(null);
+                              }}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              💾 Save
+                            </MotionButton>
+                            <MotionButton
+                              bgGradient="to-r"
+                              gradientFrom="gray.400"
+                              gradientTo="gray.600"
+                              color="white"
+                              size="sm"
+                              borderRadius="xl"
+                              onClick={() => setEditingId(null)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              ❌ Cancel
+                            </MotionButton>
+                          </HStack>
+                        </>
+                      ) : (
+                        <>
+                          <Text
+                            fontWeight="bold"
+                            fontSize="lg"
+                            color="gray.700"
+                          >
+                            📌 {t.text}
+                          </Text>
+                          {t.dueDate && (
+                            <Text fontSize="sm" color="gray.500">
+                              📅 Due: {t.dueDate}
+                            </Text>
+                          )}
+                          <HStack>
+                            <Box
+                              px={3}
+                              py={1}
+                              borderRadius="full"
+                              bg={getPriorityColor(t.priority)}
+                              color="white"
+                              fontSize="sm"
+                              fontWeight="semibold"
+                            >
+                              {t.priority === "High"
+                                ? "🔥"
+                                : t.priority === "Medium"
+                                ? "⚡"
+                                : "🟢"}{" "}
+                              {t.priority} Priority
+                            </Box>
+                          </HStack>
+                          <MotionButton
+                            bgGradient="to-r"
+                            gradientFrom="pink.400"
+                            gradientTo="purple.600"
+                            color="white"
+                            size="sm"
+                            borderRadius="xl"
+                            onClick={() =>
+                              dispatch(
+                                toggleTaskCompletion({
+                                  id: t.id,
+                                  userId: user.uid,
+                                })
+                              )
+                            }
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {t.completed ? "Completed" : "Mark as Done"}
+                          </MotionButton>
+                          <Flex gap={2}>
+                            <MotionButton
+                              bgGradient="to-r"
+                              gradientFrom="blue.400"
+                              gradientTo="blue.600"
+                              color="white"
+                              size="sm"
+                              borderRadius="xl"
+                              onClick={() => {
+                                setEditingId(t.id);
+                                setEditText(t.text);
+                                setEditPriority(t.priority || "Low");
+                                setEditDate(t.dueDate || "");
+                              }}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              ✏️ Edit
+                            </MotionButton>
+                            <MotionButton
+                              bgGradient="to-r"
+                              gradientFrom="red.400"
+                              gradientTo="red.600"
+                              color="white"
+                              size="sm"
+                              borderRadius="xl"
+                              onClick={() =>
+                                dispatch(
+                                  deleteTask({ id: t.id, userId: user.uid })
+                                )
+                              }
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              🗑️ Delete
+                            </MotionButton>
+                          </Flex>
+                        </>
+                      )}
                     </VStack>
                   </MotionBox>
                 </motion.div>
               ))}
-          </VStack>
+          </SimpleGrid>
 
           {(!tasks || tasks.length === 0) && (
             <motion.div

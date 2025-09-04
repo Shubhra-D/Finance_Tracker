@@ -32,8 +32,24 @@ const tasksSlice = createSlice({
       state.tasks = state.tasks.filter((task) => task.id !== id);
       saveTasks(userId, state.tasks);
     },
+    toggleTaskCompletion: (state, action) => {
+      const { id, userId } = action.payload;
+      const task = state.tasks.find((t) => t.id === id);
+      if (task) {
+        task.completed = !task.completed; // flip true/false
+        saveTasks(userId, state.tasks);
+      }
+    },
+    updateTask:(state,action)=>{
+      const {id,userId,updates} = action.payload;
+      const index = state.tasks.findIndex((t)=>t.id === id);
+      if(index != -1){
+        state.tasks[index] = {...state.tasks[index],...updates};
+        saveTasks(userId,state.tasks);
+      }
+    }
   },
 });
 
-export const { addTask, deleteTask, loadUserTasks } = tasksSlice.actions;
+export const { addTask, deleteTask, loadUserTasks , toggleTaskCompletion,updateTask} = tasksSlice.actions;
 export default tasksSlice.reducer;

@@ -58,7 +58,7 @@ const Navbar = () => {
       boxShadow="md"
       zIndex="1000"
       borderBottom="1px solid"
-      borderColor={colorMode === "light" ? "gray.200" : "whiteAlpha.200"} // subtle border
+      borderColor={colorMode === "light" ? "gray.200" : "whiteAlpha.200"}
     >
       <Flex alignItems="center">
         <FaLaptop size={22} />
